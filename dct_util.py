@@ -303,6 +303,11 @@ class DCT2x(nn.Module):
         x = dct2dx(x, dctMatW, dctMatH)
 
         return x
+    def flops(self, inp_shape):
+        C, H, W = inp_shape
+        flops = 0
+        flops += C * H * W * H * W
+        return flops
 
 
 class IDCT2x(nn.Module):
@@ -333,7 +338,11 @@ class IDCT2x(nn.Module):
         x = idct2dx(x, dctMatW, dctMatH)
 
         return x
-
+    def flops(self, inp_shape):
+        C, H, W = inp_shape
+        flops = 0
+        flops += C * H * W * H * W
+        return flops
 
 if __name__=='__main__':
     x = torch.randn(1, 8, 64, 64).cuda()

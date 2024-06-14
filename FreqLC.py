@@ -191,8 +191,7 @@ class FreqLCBlock(nn.Module):
             flops += self.idct.flops(inp_shape)
         # LN * 1
         flops += 1 * H * W * C
-        for blk in self.attn:
-            flops += blk.flops(inp_shape)
+        flops += self.attn.flops(inp_shape)
         return flops
 
 if __name__=='__main__':
@@ -204,3 +203,4 @@ if __name__=='__main__':
     y2 = model2(x)
     y3 = model3(x)
     print(y1.shape, y2.shape, y3.shape)
+    print(model1.flops((32, 64, 64)), model2.flops((32, 64, 64)), model3.flops((32, 64, 64)))
