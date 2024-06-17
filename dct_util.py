@@ -341,7 +341,7 @@ class IDCT2x(nn.Module):
     def flops(self, inp_shape):
         C, H, W = inp_shape
         flops = 0
-        flops += C * H * W * H * W
+        flops += C * H * W * (H + W)
         return flops
 
 if __name__=='__main__':
