@@ -3,7 +3,7 @@ from torch import nn as nn
 import numpy as np
 
 
-def dct(x, norm=None):
+def dct(x, W=None, norm=None):
     """
     Discrete Cosine Transform, Type II (a.k.a. the DCT)
 
@@ -22,10 +22,14 @@ def dct(x, norm=None):
     # print(v.shape)
     Vc = torch.fft.fft(v, dim=1) # , onesided=False)
     # print(Vc.shape)
-    k = - torch.arange(N, dtype=x.dtype, device=x.device)[None, :] * np.pi / (2 * N)
-    W_r = torch.cos(k)
-    W_i = torch.sin(k)
-
+    if W is None:
+        k = - torch.arange(N, dtype=x.dtype, device=x.device)[None, :] * np.pi / (2 * N)
+        W_r = torch.cos(k)
+        W_i = torch.sin(k)
+    else:
+        W_r, W_i = W
+        W_r = W_r.to(x.device)
+        W_i = W_i.to(x.device)
     V = Vc.real * W_r - Vc.imag * W_i # [:, :N // 2 + 1]
 
     if norm == 'ortho':
@@ -36,7 +40,7 @@ def dct(x, norm=None):
     # print(V)
     return V
 
-def idct(X, norm=None):
+def idct(X, W=None, norm=None):
     """
     The inverse to DCT-II, which is a scaled Discrete Cosine Transform, Type III
 
@@ -59,9 +63,17 @@ def idct(X, norm=None):
         X_v[:, 0] *= np.sqrt(N) * 2
         X_v[:, 1:] *= np.sqrt(N / 2) * 2
     # print(X)
-    k = torch.arange(x_shape[-1], dtype=X.dtype, device=X.device)[None, :] * np.pi / (2 * N)
-    W_r = torch.cos(k)
-    W_i = torch.sin(k)
+    if W is None:
+        k = - torch.arange(N, dtype=X.dtype, device=X.device)[None, :] * np.pi / (2 * N)
+        W_r = torch.cos(k)
+        W_i = torch.sin(k)
+    else:
+        W_r, W_i = W
+        W_r = W_r.to(X.device)
+        W_i = W_i.to(X.device)
+    # k = torch.arange(x_shape[-1], dtype=X.dtype, device=X.device)[None, :] * np.pi / (2 * N)
+    # W_r = torch.cos(k)
+    # W_i = torch.sin(k)
 
     V_t_r = X_v
     V_t_i = torch.cat([X_v[:, :1] * 0, -X_v.flip([1])[:, :-1]], dim=1)
@@ -79,7 +91,7 @@ def idct(X, norm=None):
     return x.view(*x_shape)
 
 
-def dct_2d_torch(x, norm=None):
+def dct_2d_torch(x, N_h=None, N_w=None, norm=None):
     """
     2-dimentional Discrete Cosine Transform, Type II (a.k.a. the DCT)
 
@@ -90,12 +102,12 @@ def dct_2d_torch(x, norm=None):
     :param norm: the normalization, None or 'ortho'
     :return: the DCT-II of the signal over the last 2 dimensions
     """
-    X1 = dct(x, norm=norm)
-    X2 = dct(X1.transpose(-1, -2), norm=norm)
+    X1 = dct(x, N_w, norm=norm)
+    X2 = dct(X1.transpose(-1, -2), N_h, norm=norm)
     return X2.transpose(-1, -2)
 
 
-def idct_2d_torch(X, norm=None):
+def idct_2d_torch(X, N_h=None, N_w=None, norm=None):
     """
     The inverse to 2D DCT-II, which is a scaled Discrete Cosine Transform, Type III
 
@@ -108,8 +120,8 @@ def idct_2d_torch(X, norm=None):
     :param norm: the normalization, None or 'ortho'
     :return: the DCT-II of the signal over the last 2 dimensions
     """
-    x1 = idct(X, norm=norm)
-    x2 = idct(x1.transpose(-1, -2), norm=norm)
+    x1 = idct(X, N_w, norm=norm)
+    x2 = idct(x1.transpose(-1, -2), N_h, norm=norm)
     return x2.transpose(-1, -2)
 
 def get_dctMatrix(m, n):
@@ -242,7 +254,7 @@ class DCT2_torch(nn.Module):
         self.norm = norm
     def forward(self, x):
         # print(x.shape)
-        x = dct_2d_torch(x, self.norm)
+        x = dct_2d_torch(x, norm=self.norm)
         return x
     def flops(self, inp_shape):
         C, H, W = inp_shape
@@ -255,7 +267,7 @@ class IDCT2_torch(nn.Module):
         self.norm = norm
     def forward(self, x):
         # print(x.shape)
-        x = idct_2d_torch(x, self.norm)
+        x = idct_2d_torch(x, norm=self.norm)
         return x
     def flops(self, inp_shape):
         C, H, W = inp_shape
@@ -273,7 +285,76 @@ class IDCT2(nn.Module):
         dctMat = self.dctMat.to(x.device)
         x = idct2d(x, dctMat)
         return x
+def get_dct_init(N):
+    k = - torch.arange(N, dtype=torch.float)[None, :] * np.pi / (2 * N)
+    W_r = torch.cos(k)
+    W_i = torch.sin(k)
+    return [W_r, W_i]
+class DCT2x_torch(nn.Module):
+    def __init__(self, norm='ortho'):
+        super(DCT2x_torch, self).__init__()
+        self.dctMatH = None
+        self.dctMatW = None
+        self.norm = norm
+    def check_dct_matrix(self, h, w):
+        if self.dctMatH is None or self.dctMatW is None:
+            self.dctMatH = get_dct_init(h)
+            self.dctMatW = get_dct_init(w)
+        elif h != self.dctMatH[0].shape[-1] and w != self.dctMatW[0].shape[-1]:
+            self.dctMatH = get_dct_init(h)
+            self.dctMatW = get_dct_init(w)
+        elif h != self.dctMatH[0].shape[-1]:
+            self.dctMatH = get_dct_init(h)
+            # self.dctMatH = self.dctMatH.to(x.device)
+        elif w != self.dctMatW[0].shape[-1]:
+            self.dctMatW = get_dct_init(w)
+        # print(self.dctMatW[0].shape)
+    def forward(self, x):
+        h, w = x.shape[-2:]
+        self.check_dct_matrix(h, w)
+        # print(x.shape, self.dctMatH.shape, self.dctMatW.shape)
+        x = dct_2d_torch(x, self.dctMatH, self.dctMatW, norm=self.norm)
 
+        return x
+    def flops(self, inp_shape):
+        C, H, W = inp_shape
+        flops = 0
+        flops += C * H * W * np.log2(H * W)
+        return flops
+
+class IDCT2x_torch(nn.Module):
+    def __init__(self, norm='ortho'):
+        super(IDCT2x_torch, self).__init__()
+        self.dctMatH = None
+        self.dctMatW = None
+        self.norm = norm
+
+    def check_dct_matrix(self, h, w):
+        if self.dctMatH is None or self.dctMatW is None:
+            self.dctMatH = get_dct_init(h)
+            self.dctMatW = get_dct_init(w)
+        elif h != self.dctMatH[0].shape[-1] and w != self.dctMatW[0].shape[-1]:
+            self.dctMatH = get_dct_init(h)
+            self.dctMatW = get_dct_init(w)
+        elif h != self.dctMatH[0].shape[-1]:
+            self.dctMatH = get_dct_init(h)
+            # self.dctMatH = self.dctMatH.to(x.device)
+        elif w != self.dctMatW[0].shape[-1]:
+            self.dctMatW = get_dct_init(w)
+
+    def forward(self, x):
+        h, w = x.shape[-2:]
+        self.check_dct_matrix(h, w)
+        # print(x.shape, self.dctMatH.shape, self.dctMatW.shape)
+        x = idct_2d_torch(x, self.dctMatH, self.dctMatW, norm=self.norm)
+
+        return x
+
+    def flops(self, inp_shape):
+        C, H, W = inp_shape
+        flops = 0
+        flops += C * H * W * np.log2(H * W)
+        return flops
 class DCT2x(nn.Module):
     def __init__(self, norm='ortho'):
         super(DCT2x, self).__init__()
@@ -347,7 +428,7 @@ class IDCT2x(nn.Module):
 if __name__=='__main__':
     x = torch.randn(1, 8, 64, 64).cuda()
     model1 = DCT2x().cuda()
-    model2 = DCT2_torch().cuda()
+    model2 = DCT2x_torch().cuda()
 
     y = model1(x)
     y_ = model2(x)

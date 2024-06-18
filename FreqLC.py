@@ -164,8 +164,8 @@ class FreqLCBlock(nn.Module):
             self.dct = nn.Identity()
             self.idct = nn.Identity()
         elif 'dct_torch' in cs:
-            self.dct = DCT2_torch()
-            self.idct = IDCT2_torch()
+            self.dct = DCT2x_torch()
+            self.idct = IDCT2x_torch()
         else:
             self.dct = DCT2x()
             self.idct = IDCT2x()
