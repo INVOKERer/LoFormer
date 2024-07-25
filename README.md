@@ -4,8 +4,6 @@
 [Xintian Mao](https://scholar.google.es/citations?user=eM5Ogs8AAAAJ&hl=en), Jiansheng Wang, Xingran Xie , Qingli Li and [Wang Yan](https://scholar.google.com/citations?user=5a1Cmk0AAAAJ&hl=en)
 
 
-
-
 ## Quick Run
 
 ## Training
@@ -21,6 +19,9 @@ To test the pre-trained models of Deblur [百度网盘](https://pan.baidu.com/s/
 ```
 python Motion_Deblurring/val.py 
 ```
+
+## Core Code
+FreqLC can be seen in LoFormer/FreqLC
 
 ## Results
 Results on GoPro, HIDE, Realblur test sets:
