@@ -6,7 +6,7 @@ Follow these intructions
 1. Clone our repository
 ```
 git clone https://github.com/INVOKERer/LoFormer.git
-cd AdaRevD
+cd LoFormer
 ```
 
 2. Make conda environment
