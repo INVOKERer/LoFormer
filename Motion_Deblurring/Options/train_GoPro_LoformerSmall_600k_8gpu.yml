@@ -1,0 +1,163 @@
+# general settings ./train_8gpu.sh Motion_Deblurring/Options/GoPro_LoformerLarge_600k_8gpu.yml
+name: GoPro_Loformer48_channel_mlp_600k_8gpu_freqloss 
+model_type: ImageCleanModel
+scale: 1
+num_gpu: 8 # 4  # set num_gpu: 0 for cpu mode
+manual_seed: 100
+
+# dataset and data loader settings
+datasets:
+  train:
+    name: TrainSet
+    type: Dataset_PairedImage
+    dataroot_gt: /public/home/ywang/mxt/data/GoPro/train/target_crops
+    dataroot_lq: /public/home/ywang/mxt/data/GoPro/train/input_crops
+    geometric_augs: true
+#    ema_decay: 0.999
+    filename_tmpl: '{}'
+    io_backend:
+      type: disk
+
+    # data loader
+    use_shuffle: true
+    num_worker_per_gpu: 8
+    batch_size_per_gpu: 8
+
+    ### -------------Progressive training--------------------------
+    mini_batch_sizes: [8,5,4,2,1,1]             # Batch size per gpu
+    iters: [184000,128000,96000,72000,72000,48000] # [92000,64000,48000,36000,36000,24000]
+    gt_size: 384   # Max patch size for progressive training
+    gt_sizes: [128,160,192,256,320,384]  # Patch sizes for progressive training.
+    ### -------------Progressive training2--------------------------
+#    mini_batch_sizes: [8,5,2,1,1]             # Batch size per gpu
+#    iters: [92000,64000,64000,48000,32000]
+#    gt_size: 384   # Max patch size for progressive training
+#    gt_sizes: [128,192,256,320,352]  # Patch sizes for progressive training.
+    ### ------------------------------------------------------------
+
+    ### ------- Training on single fixed-patch size 128x128---------
+#    mini_batch_sizes: [2]
+#    iters: [300000]
+#    gt_size: 256
+#    gt_sizes: [256]
+    ### ------------------------------------------------------------
+
+    dataset_enlarge_ratio: 1
+    prefetch_mode: ~
+
+  val:
+    name: ValSet
+    type: Dataset_PairedImage
+#    dataroot_gt: ../../../Datasets/GoPro/val/target_crops
+#    dataroot_lq: ../../../Datasets/GoPro/val/input_crops
+#    dataroot_gt: ~/Data1/mxt/GoPro/val/target_crops
+#    dataroot_lq: ~/Data1/mxt/GoPro/val/input_crops
+#    dataroot_gt: /data/RealBlur/RealBlur_J/val/target_crops
+#    dataroot_lq: /data/RealBlur/RealBlur_J/val/input_crops
+    dataroot_gt: /public/home/ywang/mxt/data/GoPro/val/target_crops
+    dataroot_lq: /public/home/ywang/mxt/data/GoPro/val/input_crops
+    crop_size: 256
+    io_backend:
+      type: disk
+
+# network structures
+network_g:
+  type: LoFormer # DCTproformer
+  inp_channels: 3
+  out_channels: 3
+  dim: 32 # 24 # 32 # 48
+  enc_blk_nums: [1,2,3] # [1,2,3,8]
+  middle_blk_num: 7
+  dec_blk_nums: [3,2,2]
+  heads_enc: [1,2,4]
+  heads_mid: 8
+  ffn_expansion_factor: 2.66
+  bias: True
+  LayerNorm_type: WithBias
+  dual_pixel_task: False
+#  train_size: 384
+  window_size_enc: [8, 8, 8] # [16, 8, 4, 2] # [8, 8, 8, 8] # [False, False, False, False] # [8, 8, 8, 8] # [128, 64, 32, 16] # [64, 32, 16, 8]
+  window_size_mid: 8 # [32, 32, 16, 8] # [384, 192, 96, 48] # [False, False, False, False] # [256, 128, 64, 32]
+  grid_size_enc: [8, 8, 8] # [16, 8, 4, 2] # [48, 24, 12, 6] # [16, 8, 4, 2]
+  grid_size_mid: 8
+  window_size_dct_enc: [0,0,0]
+  window_size_dct_mid: 0
+  up_method: upshuffle # freq_up
+  cs_e: [channel_mlp, channel_mlp]
+  cs_m: [channel_mlp, channel_mlp]
+  cs_d: [channel_mlp, channel_mlp]
+  norm_type_: [['LayerNorm', 'LayerNorm'], ['LayerNorm', 'LayerNorm']]
+  qk_norm: [False, False] # [False, False] # [True, True]
+  temp_adj:  # max
+  ffn: ffn # Conv2Former  #ffn # dctffn # GDCT
+  # [1, 1, 1, 1] #  # [16, 8, 4, 2] [16, 8, 4, 2] # [8, 4, 2, 1]
+#  window_size: [8, 8, 8, 8] # [64, 32, 16, 8] # [128, 64, 32, 16] # [64, 32, 16, 8]
+#  window_size_dct: [8, 8, 8, 8] # [1, 1, 1, 1] #  # [16, 8, 4, 2] [16, 8, 4, 2] # [8, 4, 2, 1]
+
+
+# path
+path:
+  pretrain_network_g: ~
+  strict_load_g: true
+  resume_state: /public/home/ywang/mxt/Loformer/experiments/GoPro_Loformer48_channel_mlp_600k_8gpu_freqloss/training_states/70000.state
+
+# training settings
+train:
+  total_iter: 600000 # 600000
+  warmup_iter: -1 # no warm up
+  use_grad_clip: true
+
+  # Split 300k iterations into two cycles. 
+  # 1st cycle: fixed 3e-4 LR for 92k iters. 
+  # 2nd cycle: cosine annealing (3e-4 to 1e-6) for 208k iters.
+  scheduler:
+    type: CosineAnnealingRestartCyclicLR
+    periods: [184000, 416000]
+    restart_weights: [1,1]
+    eta_mins: [0.0003,0.000001]    # [0.0003,0.000001]
+  
+  mixing_augs:
+    mixup: false
+    mixup_beta: 1.2
+    use_identity: true
+
+  optim_g:
+    type: AdamW
+    lr: !!float 3e-4 # !!float 1e-3 # 3e-4
+    weight_decay: !!float 1e-4
+    betas: [0.9, 0.999]
+  
+  # losses
+  pixel_opt:
+    type: FreqLoss # L1Loss
+    loss_weight: 1
+    reduction: mean
+
+# validation settings
+val:
+  window_size: 8
+  val_freq: !!float 4e3 # !!float 4e3
+  save_img: false
+  rgb2bgr: true
+  use_image: true
+  max_minibatch: 8
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 0
+      test_y_channel: false
+
+# logging settings
+logger:
+  print_freq: 1000
+  save_checkpoint_freq: !!float 1e4 # !!float 4e3
+  use_tb_logger: true
+  wandb:
+    project: ~
+    resume_id: ~
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29500
