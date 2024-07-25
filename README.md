@@ -16,22 +16,15 @@ cd LoFormer
 ./train_8gpu.sh Motion_Deblurring/Options/train_GoPro_LoformerLarge_600k_8gpu.yml
 ```
 
-
 ## Evaluation
 To test the pre-trained models of Deblur [百度网盘](https://pan.baidu.com/s/1dFUmGO0d6H0cThyLYFz18g)(提取码:ca3l) on your own images, run 
 ```
 python Motion_Deblurring/val.py 
 ```
 
-
 ## Results
 Results on GoPro, HIDE, Realblur test sets:
 [百度网盘](https://pan.baidu.com/s/1Tx6_iQ58u95t-jfken3QZQ)(提取码:rcx5)
-
-## Reference Code:
-- https://github.com/megvii-research/NAFNet
-- https://github.com/INVOKERer/DeepRFT/tree/AAAI2023
-- https://github.com/swz30/Restormer
 
 ## Citation
 If you use , please consider citing:
@@ -46,9 +39,15 @@ If you use , please consider citing:
 ## Contact
 If you have any question, please contact mxt_invoker1997@163.com
 
-**Acknowledgment:** This code is based on the [BasicSR](https://github.com/xinntao/BasicSR) toolbox. 
-
 ## Our Related Works
 - Deep Residual Fourier Transformation for Single Image Deblurring, arXiv 2021. [Paper](https://arxiv.org/abs/2111.11745) | [Code](https://github.com/INVOKERer/DeepRFT)
 - Intriguing Findings of Frequency Selection for Image Deblurring, AAAI 2023. [Paper](https://arxiv.org/abs/2111.11745) | [Code](https://github.com/DeepMed-Lab-ECNU/DeepRFT-AAAI2023)
 - AdaRevD: Adaptive Patch Exiting Reversible Decoder Pushes the Limit of Image Deblurring, CVPR 2024. [Paper](https://arxiv.org/abs/2406.09135) | [Code](https://github.com/INVOKERer/AdaRevD)
+
+
+## Reference Code:
+- https://github.com/megvii-research/NAFNet
+- https://github.com/INVOKERer/DeepRFT/tree/AAAI2023
+- https://github.com/swz30/Restormer
+
+**Acknowledgment:** This code is based on the [BasicSR](https://github.com/xinntao/BasicSR) toolbox. 
