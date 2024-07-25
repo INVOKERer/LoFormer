@@ -15,7 +15,7 @@ cd LoFormer
 ```
 
 ## Evaluation
-To test the pre-trained models of Deblur [百度网盘](https://pan.baidu.com/s/1dFUmGO0d6H0cThyLYFz18g)(提取码:ca3l) on your own images, run 
+To test the pre-trained models of Deblur [百度网盘](https://pan.baidu.com/s/1dFUmGO0d6H0cThyLYFz18g)(提取码:ca3l) or [GooGleDrive](https://drive.google.com/drive/folders/1gPh3tjShDSKhBhbm6OtL_4caYkwDr2lW?usp=sharing) on your own images, run 
 ```
 python Motion_Deblurring/val.py 
 ```
