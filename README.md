@@ -1,3 +1,7 @@
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/loformer-local-frequency-transformer-for/image-deblurring-on-gopro)](https://paperswithcode.com/sota/image-deblurring-on-gopro?p=loformer-local-frequency-transformer-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/loformer-local-frequency-transformer-for/deblurring-on-hide-trained-on-gopro)](https://paperswithcode.com/sota/deblurring-on-hide-trained-on-gopro?p=loformer-local-frequency-transformer-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/loformer-local-frequency-transformer-for/deblurring-on-realblur-j-1)](https://paperswithcode.com/sota/deblurring-on-realblur-j-1?p=loformer-local-frequency-transformer-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/loformer-local-frequency-transformer-for/deblurring-on-realblur-r)](https://paperswithcode.com/sota/deblurring-on-realblur-r?p=loformer-local-frequency-transformer-for)
 
 
 # [LoFormer: Local Frequency Transformer for Image Deblurring](https://arxiv.org/abs/2407.16993)  (ACM MM 24)
