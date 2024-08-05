@@ -36,7 +36,7 @@ If you use , please consider citing:
 ```
 @inproceedings{xintm2024LoFormer, 
     title = {LoFormer: Local Frequency Transformer for Image Deblurring},
-    author = {Xintian Mao, JIansheng Wang, Xingran Xie, Qingli Li and Yan Wang}, 
+    author = {Xintian Mao, Jiansheng Wang, Xingran Xie, Qingli Li and Yan Wang}, 
     booktitle = {Proc. ACM MM}, 
     year = {2024}
     }
